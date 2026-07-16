@@ -1,4 +1,4 @@
-const { withAppBuildGradle } = require('@expo/config-plugins');
+const { withAppBuildGradle, withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -39,7 +39,45 @@ module.exports = function withFixBuildGradle(config) {
     }
   );
 
-  // Fix 3: Remove enableBundleCompression from generated app/build.gradle
+  // Fix 3: Patch generated MainApplication.kt to use RN 0.78.3 APIs
+  // expo@54 template.tgz ships a MainApplication.kt targeting RN 0.79
+  // (ReactNativeApplicationEntryPoint, ReleaseLevel) which don't exist in RN 0.78.3.
+  // withDangerousMod runs after template extraction so android/ already exists.
+  const findMainApplication = (dir) => {
+    if (!fs.existsSync(dir)) return null;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) { const r = findMainApplication(full); if (r) return r; }
+      else if (entry.name === 'MainApplication.kt') return full;
+    }
+    return null;
+  };
+  config = withDangerousMod(config, [
+    'android',
+    (cfg) => {
+      const appSrcDir = path.join(cfg.modRequest.projectRoot, 'android', 'app', 'src', 'main', 'java');
+      const mainAppPath = findMainApplication(appSrcDir);
+      if (mainAppPath) {
+        patchFile(mainAppPath, (src) => {
+          if (!src.includes('ReactNativeApplicationEntryPoint')) return src;
+          return src
+            .replace("import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative\n", '')
+            .replace("import com.facebook.react.common.ReleaseLevel\n", '')
+            .replace(
+              'import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint\n',
+              'import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load\n'
+            )
+            .replace(
+              /    DefaultNewArchitectureEntryPoint\.releaseLevel = try \{[\s\S]*?\}\s*\n\s*loadReactNative\(this\)/,
+              '    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {\n      load()\n    }'
+            );
+        });
+      }
+      return cfg;
+    },
+  ]);
+
+  // Fix 4: Remove enableBundleCompression from generated app/build.gradle
   return withAppBuildGradle(config, (mod) => {
     mod.modResults.contents = mod.modResults.contents
       .split('\n')
