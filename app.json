@@ -19,6 +19,7 @@
       },
       "package": "com.blindpath.game",
       "versionCode": 1,
+      "newArchEnabled": false,
       "privacyPolicy": "https://rounaq-ahmad.github.io/blind-path/privacy-policy.html",
       "intentFilters": [
         {
