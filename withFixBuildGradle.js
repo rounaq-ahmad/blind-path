@@ -26,16 +26,15 @@ module.exports = function withFixBuildGradle(config) {
     path.join(root, 'node_modules/expo/android/src/main/java/expo/modules/ExpoReactHostFactory.kt'),
     (src) => {
       if (src.includes('getReactNativeConfig')) return src;
-      // Add import
+      // Add import next to existing fabric import
       let out = src.replace(
         'import com.facebook.react.fabric.ComponentFactory',
         'import com.facebook.react.fabric.ComponentFactory\nimport com.facebook.react.fabric.ReactNativeConfig'
       );
-      // Add method implementation before closing brace of ExpoReactHostDelegate
+      // Insert method BEFORE handleInstanceException (same class scope, safe insertion point)
       out = out.replace(
-        /(\s+override fun handleInstanceException[\s\S]+?\}\s+)\}/,
-        (match) => match.trimEnd().slice(0, -1) +
-          '\n\n    override fun getReactNativeConfig(): ReactNativeConfig = ReactNativeConfig.DEFAULT_CONFIG\n  }'
+        '    override fun handleInstanceException',
+        '    override fun getReactNativeConfig(): ReactNativeConfig = ReactNativeConfig.DEFAULT_CONFIG\n\n    override fun handleInstanceException'
       );
       return out;
     }
