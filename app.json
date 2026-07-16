@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Blind Path",
+    "slug": "blind-path-android",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d0b1a"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d0b1a"
+      },
+      "package": "com.blindpath.game",
+      "versionCode": 1,
+      "privacyPolicy": "https://blindpath.game/privacy-policy.html",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "blindpath"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "8be3f92b-28c9-4163-9822-a99545d89d55"
+      }
+    },
+    "owner": "rounaq786"
+  }
+}
